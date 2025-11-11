@@ -1,4 +1,4 @@
-# alfacreator-frontend/Dockerfile
+# alfacreator-frontend-old/Dockerfile
 
 # --- STAGE 1: Сборка React-приложения ---
 FROM node:18-alpine AS build

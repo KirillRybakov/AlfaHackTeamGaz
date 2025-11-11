@@ -1,31 +1,17 @@
-# docker-compose.yml
-
-version: '3.8'
-
 services:
-  # Сервис бэкенда
   backend:
     build:
-      context: ./alfacreator-backend  # Путь к папке с бэкендом
+      context: ./alfacreator-backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000" # Пробрасываем порт 8000 контейнера на 8000 хоста
-    # Ключевая настройка для доступа к Ollama, который работает на хост-машине
-    # Для Linux:
-    network_mode: "host"
-    # Для Mac/Windows, закомментируйте network_mode и раскомментируйте extra_hosts:
-    # extra_hosts:
-    #  - "host.docker.internal:host-gateway"
-    # Также для Mac/Windows нужно передать переменную в бэкенд:
-    # environment:
-    #   - OLLAMA_HOST=http://host.docker.internal:11434
+      - "8000:8000"
+    # Мы убрали network_mode: "host", чтобы backend был в той же сети, что и frontend
 
-  # Сервис фронтенда
   frontend:
     build:
-      context: ./alfacreator-frontend # Путь к папке с фронтендом
+      context: ./alfacreator-frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80" # Пробрасываем порт 80 контейнера (Nginx) на 3000 хоста
+      - "3000:80"
     depends_on:
-      - backend # Фронтенд запустится только после успешного старта бэкенда
+      - backend
