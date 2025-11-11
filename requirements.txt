@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+pandas
+python-multipart
+aiofiles
+loguru
+ollama
