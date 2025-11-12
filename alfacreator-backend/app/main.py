@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 import sys
 
-from app.routers import promo, analytics
+from app.routers import promo, analytics, documents
 
 app = FastAPI(
     title="Альфа-Креатор API",
@@ -33,3 +33,4 @@ def read_root():
 # Подключение роутеров
 app.include_router(promo.router, prefix="/api/v1/promo", tags=["Промо-материалы"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Аналитика"])
+app.include_router(documents.router, prefix="/api/v1/documents", tags=["Документы"])

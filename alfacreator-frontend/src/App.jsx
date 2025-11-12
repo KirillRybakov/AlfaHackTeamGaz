@@ -1,7 +1,10 @@
+// alfacreator-frontend/src/App.jsx
+
 import React, { useState } from 'react';
 import Header from './components/Header';
 import PromoGenerator from './modules/PromoGenerator';
 import AnalyticsDashboard from './modules/AnalyticsDashboard';
+import DocumentGenerator from './modules/DocumentGenerator';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -19,18 +22,22 @@ function App() {
       <Toaster position="top-center" reverseOrder={false} />
       <Header />
       <main className="container mx-auto p-4 md:p-6">
-        <div className="mb-6 flex justify-center space-x-4">
+        <div className="mb-6 flex justify-center space-x-2 md:space-x-4">
           <button onClick={() => setActiveTab('promo')} className={navButtonClasses('promo')}>
             Генератор Промо
           </button>
           <button onClick={() => setActiveTab('analytics')} className={navButtonClasses('analytics')}>
             Аналитика
           </button>
+          <button onClick={() => setActiveTab('documents')} className={navButtonClasses('documents')}>
+            Шаблоны
+          </button>
         </div>
 
         <div className="max-w-3xl mx-auto">
           {activeTab === 'promo' && <PromoGenerator />}
           {activeTab === 'analytics' && <AnalyticsDashboard />}
+          {activeTab === 'documents' && <DocumentGenerator />}
         </div>
       </main>
     </div>

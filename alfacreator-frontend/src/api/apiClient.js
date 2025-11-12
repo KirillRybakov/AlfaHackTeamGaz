@@ -26,3 +26,7 @@ export const uploadAnalyticsFile = (file) => {
 export const getAnalyticsResult = (taskId) => {
   return apiClient.get(`/analytics/results/${taskId}`);
 };
+
+export const generateDocument = (data) => {
+  return apiClient.post('/documents/generate', data);
+};
