@@ -1,6 +1,15 @@
 # alfacreator-backend/app/schemas/analytics.py
+
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional, Union
+
+# Этот класс мы случайно удалили. Возвращаем его.
+# Он используется для ответа от эндпоинта /upload
+class TaskResponse(BaseModel):
+    task_id: str = Field(..., example="a1b2c3d4-e5f6-7890-1234-567890abcdef")
+    status: str = Field("processing", example="processing")
+
+# --- Остальные классы, которые мы уже добавили ---
 
 # Модель для успешного результата
 class AnalyticsSuccessResult(BaseModel):

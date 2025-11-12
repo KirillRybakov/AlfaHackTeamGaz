@@ -9,7 +9,6 @@ const apiClient = axios.create({
   },
 });
 
-// ... остальной код файла (generatePromo, uploadAnalyticsFile, etc.) остается без изменений
 export const generatePromo = (data) => {
   return apiClient.post('/promo/generate', data);
 };
