@@ -30,3 +30,9 @@ export const getAnalyticsResult = (taskId) => {
 export const generateDocument = (data) => {
   return apiClient.post('/documents/generate', data);
 };
+
+export const recommend_calendar = (data) => {
+  return apiClient.post('/calendar/recommend', data);
+};
+
+export default apiClient;

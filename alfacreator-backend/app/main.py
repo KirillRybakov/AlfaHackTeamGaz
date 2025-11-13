@@ -34,3 +34,4 @@ def read_root():
 app.include_router(promo.router, prefix="/api/v1/promo", tags=["Промо-материалы"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Аналитика"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Документы"])
+app.include_router(documents.router, prefix="/api/v1/calendar", tags=["Календарь"])
