@@ -1,15 +1,14 @@
-# alfacreator-backend/app/main.py
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 import sys
 
 # Импортируем все наши роутеры
-from app.routers import promo, analytics, documents, smart_analytics, history
+from app.routers import promo, analytics, documents, smart_analytics, history, calendar
 # Импортируем все для работы с БД
 from app.database import engine, Base
 from app import models
+
 
 app = FastAPI(
     title="Альфа-Креатор API",
@@ -47,3 +46,4 @@ app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Анал
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Документы"])
 app.include_router(smart_analytics.router, prefix="/api/v1/smart_analytics", tags=["Умная Аналитика"])
 app.include_router(history.router, prefix="/api/v1/history", tags=["История"])
+app.include_router(calendar.router, prefix="/api/v1/calendar", tags=["Умный календарь"])
