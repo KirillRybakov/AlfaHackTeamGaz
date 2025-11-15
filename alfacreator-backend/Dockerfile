@@ -15,7 +15,12 @@ ENV PYTHONUNBUFFERED 1
 
 # 5. Копирование файлов зависимостей и их установка
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install \
+    --progress-bar off \
+    --verbose \
+    --default-timeout=100 \
+    --no-cache-dir \
+    -r requirements.txt
 
 # 6. Копирование кода приложения
 COPY ./app /app/app

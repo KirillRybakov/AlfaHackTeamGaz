@@ -1,7 +1,6 @@
-// alfacreator-frontend/src/api/apiClient.js
-
 import axios from 'axios';
 
+// Создаем инстанс axios
 const apiClient = axios.create({
   baseURL: '/api/v1',
   headers: {
@@ -9,6 +8,16 @@ const apiClient = axios.create({
   },
 });
 
+// Interceptor для автоматического добавления токена в заголовки
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Экспортируем каждую функцию по имени
 export const generatePromo = (data) => apiClient.post('/promo/generate', data);
 
 export const uploadAnalyticsFile = (file) => {
@@ -23,7 +32,6 @@ export const getAnalyticsResult = (taskId) => apiClient.get(`/analytics/results/
 
 export const generateDocument = (data) => apiClient.post('/documents/generate', data);
 
-// Вот функция, которую мы добавим/исправим
 export const runSmartAnalysis = (formData) => {
   return apiClient.post('/smart_analytics/smart', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -33,15 +41,6 @@ export const runSmartAnalysis = (formData) => {
 export const getHistory = (type) => {
   return apiClient.get(`/history/?request_type=${type}`);
 };
-
-// Interceptor для автоматического добавления токена в заголовки
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 // Функции для аутентификации
 export const registerUser = (email, password) => {
@@ -61,5 +60,13 @@ export const getCurrentUserProfile = () => {
   return apiClient.get('/auth/users/me');
 };
 
-// Удаляем экспорт по умолчанию, так как мы используем именованные экспорты
-// export default apiClient;
+// Функция для чата SMM-бота
+export const sendChatMessage = (formData) => {
+  return apiClient.post('/smm_bot/chat', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data', // Исправлена опечатка 'form--data'
+    },
+  });
+};
+
+// Экспорт по умолчанию не используется, чтобы все импорты были одинаковыми.

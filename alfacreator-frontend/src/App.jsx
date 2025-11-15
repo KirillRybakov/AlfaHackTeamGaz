@@ -1,5 +1,3 @@
-// alfacreator-frontend/src/App.jsx
-
 import React from 'react';
 // 1. Импортируем компоненты для роутинга
 import { Routes, Route, NavLink, Outlet, Navigate } from 'react-router-dom';
@@ -14,6 +12,7 @@ import PromoGenerator from './modules/PromoGenerator';
 import AnalyticsDashboard from './modules/AnalyticsDashboard';
 import DocumentGenerator from './modules/DocumentGenerator';
 import SmartAnalytics from './modules/SmartAnalytics';
+import ChatWidget from './modules/ChatWidget'; // Импортировано из ветки test
 
 // 3. Создаем компонент-обертку для страниц с общей навигацией
 const AppLayout = () => {
@@ -87,6 +86,7 @@ function App() {
           </div>
         } />
       </Routes>
+      <ChatWidget /> {/* Компонент чата добавлен из ветки test */}
     </div>
   );
 }

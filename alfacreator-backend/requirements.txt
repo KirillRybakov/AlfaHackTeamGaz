@@ -13,5 +13,11 @@ httpx
 passlib
 bcrypt==4.0.1
 python-jose[cryptography]
-python-multipart
 pydantic[email]
+#Все библиотеки, представленные ниже, нужны для парсера и не обязательны к установке для запуска проекта
+sentence-transformers
+chromadb
+pypdf
+python-docx
+langchain-core
+langchain-text-splitters

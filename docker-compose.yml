@@ -23,6 +23,7 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     volumes:
       - ./database_data:/app/database_data
+      - ./alfacreator-backend/chroma_db:/app/chroma_db
 
 
   # 3. Сервис фронтенда

@@ -4,7 +4,7 @@ from loguru import logger
 import sys
 
 # Импортируем все наши роутеры
-from app.routers import promo, analytics, documents, smart_analytics, history, auth
+from app.routers import promo, analytics, documents, smart_analytics, history, smm_bot_router
 # Импортируем все для работы с БД
 from app.database import engine, Base
 from app import models
@@ -46,4 +46,4 @@ app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Анал
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Документы"])
 app.include_router(smart_analytics.router, prefix="/api/v1/smart_analytics", tags=["Умная Аналитика"])
 app.include_router(history.router, prefix="/api/v1/history", tags=["История"])
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Аутентификация"])
+app.include_router(smm_bot_router.router, prefix="/api/v1/smm_bot", tags=["SMM Ассистент"])
