@@ -21,4 +21,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
+    company_name = Column(String, nullable=True)
+    job_title = Column(String, nullable=True)
     history_entries = relationship("History", back_populates="owner")

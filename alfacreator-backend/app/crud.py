@@ -46,3 +46,16 @@ async def create_user(db: AsyncSession, user: user_schema.UserCreate):
     await db.commit()
     await db.refresh(db_user)
     return db_user
+
+async def update_user(db: AsyncSession, user: models.User, update_data: user_schema.UserUpdate) -> models.User:
+    # model_dump(exclude_unset=True) вернет словарь только с теми полями,
+    # которые действительно были переданы клиентом для обновления.
+    update_data_dict = update_data.model_dump(exclude_unset=True)
+    
+    for key, value in update_data_dict.items():
+        setattr(user, key, value)
+        
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user

@@ -44,3 +44,37 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.get("/users/me", response_model=user_schema.User)
 async def read_users_me(current_user: user_schema.User = Depends(get_current_user)):
     return current_user
+
+
+# --- ЭНДПОИНТЫ ПРОФИЛЯ ---
+@router.patch("/users/me", response_model=user_schema.User)
+async def update_current_user(
+    update_data: user_schema.UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: user_schema.User = Depends(get_current_user)
+):
+    # Проверка, если новый email уже занят (опционально)
+    if update_data.email and update_data.email != current_user.email:
+        existing_user = await crud.get_user_by_email(db, email=update_data.email)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Этот email уже используется другим пользователем.")
+    return await crud.update_user(db=db, user=current_user, update_data=update_data)
+
+
+@router.post("/users/me/change-password")
+async def change_current_user_password(
+    password_data: user_schema.PasswordUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: user_schema.User = Depends(get_current_user)
+):
+    is_correct_password = await run_in_threadpool(
+        security.verify_password, password_data.current_password, current_user.hashed_password
+    )
+    if not is_correct_password:
+        raise HTTPException(status_code=400, detail="Неверный текущий пароль")
+        
+    current_user.hashed_password = security.get_password_hash(password_data.new_password)
+    db.add(current_user)
+    await db.commit()
+    
+    return {"message": "Пароль успешно изменен"}

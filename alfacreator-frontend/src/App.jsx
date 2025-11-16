@@ -13,7 +13,7 @@ import AnalyticsDashboard from './modules/AnalyticsDashboard';
 import DocumentGenerator from './modules/DocumentGenerator';
 import SmartAnalytics from './modules/SmartAnalytics';
 import ChatWidget from './modules/ChatWidget';
-//import ProfilePage from './modules/ProfilePage';
+import ProfilePage from './modules/ProfilePage';
 
 const AppLayout = () => {
   const navButtonClasses = ({ isActive }) =>
@@ -57,7 +57,7 @@ function App() {
           <Route path="analytics" element={<AnalyticsDashboard />} />
           <Route path="documents" element={<DocumentGenerator />} />
           <Route path="smart-analytics" element={<SmartAnalytics />} />
-          {/* <Route path="profile" element={<ProfilePage />} /> */}
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={

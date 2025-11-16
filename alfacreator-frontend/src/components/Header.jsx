@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Импортируем хук
 
 const Header = () => {
@@ -10,6 +10,9 @@ const Header = () => {
     logout();
     navigate('/login'); // Перенаправляем на страницу входа после выхода
   };
+
+  const navLinkClasses = "font-semibold hover:text-red-200 transition-colors";
+  const activeNavLinkClasses = "text-white underline"; // Стиль для активной ссылки, если хотите
 
   return (
     <header className="bg-red-600 text-white p-4 shadow-md sticky top-0 z-50">
@@ -22,6 +25,15 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               <span className="hidden sm:block">Привет, {user?.email}!</span>
+
+              {/* ▼▼▼ ДОБАВЛЯЕМ ССЫЛКУ НА ПРОФИЛЬ ▼▼▼ */}
+              <NavLink 
+                to="/profile" 
+                className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : 'text-red-100'}`}
+              >
+                Профиль
+              </NavLink>
+
               <button
                 onClick={handleLogout}
                 className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold hover:bg-red-100 transition"

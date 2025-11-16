@@ -1,13 +1,15 @@
+// src/contexts/AuthContext.jsx
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { loginUser, registerUser, getCurrentUserProfile } from '../api/apiClient';
-import Loader from '../components/Loader'; // Предполагаем, что у вас есть компонент лоадера
+import Loader from '../components/Loader';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('authToken'));
-  const [loading, setLoading] = useState(true); // Для первоначальной проверки токена
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -17,7 +19,7 @@ export const AuthProvider = ({ children }) => {
           setUser(data);
         } catch (error) {
           console.error("Невалидный токен, выход из системы.");
-          logout(); // Если токен есть, но он невалиден
+          logout();
         }
       }
       setLoading(false);
@@ -29,12 +31,10 @@ export const AuthProvider = ({ children }) => {
     const { data } = await loginUser(email, password);
     localStorage.setItem('authToken', data.access_token);
     setToken(data.access_token);
-    // useEffect выше сам загрузит данные пользователя после установки токена
   };
 
   const register = async (email, password) => {
     await registerUser(email, password);
-    // После успешной регистрации сразу логиним пользователя
     await login(email, password);
   };
 
@@ -44,12 +44,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (updatedUserData) => {
+    setUser(prevUser => ({ ...prevUser, ...updatedUserData }));
+  };
+
   if (loading) {
-    return <Loader />; // Показываем лоадер, пока проверяем сессию
+    // Оборачиваем в div для лучшего отображения
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
+        <Loader />
+      </div>
+    );
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated: !!token, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

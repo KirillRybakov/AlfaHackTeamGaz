@@ -69,4 +69,20 @@ export const sendChatMessage = (formData) => {
   });
 };
 
+/**
+ * Обновляет данные профиля текущего пользователя.
+ * @param {object} profileData - Объект с обновляемыми данными, например { full_name: "Новое Имя" }
+ */
+export const updateUserProfile = (profileData) => {
+  return apiClient.patch('/auth/users/me', profileData);
+};
+
+/**
+ * Изменяет пароль текущего пользователя.
+ * @param {object} passwordData - Объект вида { current_password: "...", new_password: "..." }
+ */
+export const changeUserPassword = (passwordData) => {
+  return apiClient.post('/auth/users/me/change-password', passwordData);
+};
+
 // Экспорт по умолчанию не используется, чтобы все импорты были одинаковыми.
