@@ -2,34 +2,19 @@
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
-
+from app.database import get_db
 from app import crud
-from app.schemas import history as history_schema
-from app.schemas import user as user_schema
-from app.core.dependencies import get_db, get_current_user
+from typing import List, Optional
+from app.schemas.history import History
 
 router = APIRouter()
 
-@router.get("/", response_model=List[history_schema.History])
-async def read_history_for_current_user(
-    # Принимаем request_type как необязательный query-параметр
-    request_type: Optional[str] = Query(None, description="Тип запроса для фильтрации (например, 'promo')"),
+@router.get("/", response_model=List[History])
+async def read_history(
+    request_type: Optional[str] = Query(None, description="Фильтр по типу запроса: 'promo', 'analytics', 'document'"),
     skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_db),
-    current_user: user_schema.User = Depends(get_current_user),
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
 ):
-    """
-    Получает историю запросов для текущего аутентифицированного пользователя.
-    Можно отфильтровать по типу запроса.
-    """
-    # Передаем ID пользователя и тип запроса в CRUD-функцию
-    history_entries = await crud.get_history_entries(
-        db=db, 
-        user_id=current_user.id, 
-        request_type=request_type, 
-        skip=skip, 
-        limit=limit
-    )
+    history_entries = await crud.get_history_entries(db, request_type=request_type, skip=skip, limit=limit)
     return history_entries

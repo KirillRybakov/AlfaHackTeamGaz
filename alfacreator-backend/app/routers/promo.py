@@ -1,23 +1,19 @@
+# alfacreator-backend/app/routers/promo.py
+
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
 from loguru import logger
-import re
 from app.schemas.promo import PromoRequest, PromoResponse
 from app.core.llm_client import llm_client
-from app.core.dependencies import get_db, get_current_user
-from app.schemas import history as history_schema
-from app.schemas import user as user_schema
+from app.database import get_db
 from app import crud
 
 router = APIRouter()
 
+
 @router.post("/generate", response_model=PromoResponse)
-async def generate_promo(
-    request: PromoRequest, 
-    db: AsyncSession = Depends(get_db),
-    current_user: user_schema.User = Depends(get_current_user)
-):
+async def generate_promo(request: PromoRequest, db: AsyncSession = Depends(get_db)):
     prompt = (
         "Ты — профессиональный SMM-копирайтер. Создай 3 уникальных, коротких рекламных поста.\n"
         "Информация:\n"
@@ -32,48 +28,50 @@ async def generate_promo(
 
     try:
         response_str = await llm_client.generate_json_response(prompt)
+
         results = []
-
         try:
-            # Simplified and more robust JSON parsing logic
-            # Find the start of the JSON array '[' and the end ']'
-            start_index = response_str.find('[')
-            end_index = response_str.rfind(']')
-            
+            start_index = response_str.find('{') if response_str.find('[') == -1 else response_str.find('[')
+            end_index = response_str.rfind('}') if response_str.rfind(']') == -1 else response_str.rfind(']')
             if start_index != -1 and end_index != -1:
-                json_str = response_str[start_index : end_index + 1]
-                parsed_data = json.loads(json_str)
-                if isinstance(parsed_data, list):
-                    results = [str(item) for item in parsed_data if isinstance(item, (str, int, float))]
+                json_str = response_str[start_index:end_index + 1]
+                data = json.loads(json_str)
             else:
-                 raise ValueError("JSON array markers not found in LLM response")
+                data = json.loads(response_str)
 
+            if isinstance(data, list):
+                results = [item for item in data if isinstance(item, str) and item]
+            elif isinstance(data, dict):
+                found_list = False
+                for key, value in data.items():
+                    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+                        results = [item for item in value if item]
+                        found_list = True
+                        break
+                if not found_list:
+                    results = [key for key in data.keys() if isinstance(key, str) and len(key) > 20]
         except Exception as e:
-            logger.warning(f"Failed to parse JSON cleanly, attempting regex fallback. Error: {e}")
-            # Fallback to regex if JSON parsing fails
-            found_strings = re.findall(r'"(.*?)"', response_str)
-            results = [s for s in found_strings if len(s) > 20]
+            logger.warning(f"Не удалось распарсить JSON, пытаемся извлечь текст регулярными выражениями. Ошибка: {e}")
+            import re
+            found_strings = re.findall(r'"([^"]+)"', response_str)
+            results = [s for s in found_strings if len(s) > 20 and not s.startswith(('{', '[', '}', ']'))]
 
         if not results:
-            logger.warning(f"Could not extract any valid results from LLM response: {response_str}")
-            raise ValueError("LLM returned an empty or unparsable result")
+            raise ValueError("LLM вернула пустой или непонятный результат")
 
-        # 4.1. Create a Pydantic HistoryCreate object
-        history_entry_data = history_schema.HistoryCreate(
-            request_type="promo",
-            input_data=request.model_dump(),
-            output_data={"results": results}
-        )
-        
-        # 4.2. Call the CRUD function with the correct arguments
+        clean_results = [res.split('"}')[0].strip() for res in results]
+
+        # --- СОХРАНЯЕМ В ИСТОРИЮ ---
         await crud.create_history_entry(
             db=db,
-            user_id=current_user.id, # Pass the current user's ID
-            entry=history_entry_data   # Pass the Pydantic object
+            request_type="promo",
+            input_data=request.model_dump(),
+            output_data={"results": clean_results}
         )
+        # -------------------------
 
-        return PromoResponse(results=results)
+        return PromoResponse(results=clean_results)
 
     except Exception as e:
-        logger.error(f"Critical error in promo endpoint: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"A critical backend error occurred: {str(e)}")
+        logger.error(f"Критическая ошибка в эндпоинте promo: {e}")
+        raise HTTPException(status_code=500, detail=f"Критическая ошибка бэкенда: {str(e)}")

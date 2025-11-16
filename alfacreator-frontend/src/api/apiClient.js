@@ -1,3 +1,5 @@
+// alfacreator-frontend/src/api/apiClient.js
+
 import axios from 'axios';
 
 // Создаем инстанс axios
@@ -6,15 +8,6 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
-
-// Interceptor для автоматического добавления токена в заголовки
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
 });
 
 // Экспортируем каждую функцию по имени
@@ -42,31 +35,15 @@ export const getHistory = (type) => {
   return apiClient.get(`/history/?request_type=${type}`);
 };
 
-// Функции для аутентификации
-export const registerUser = (email, password) => {
-  return apiClient.post('/auth/register', { email, password });
-};
-
-export const loginUser = (email, password) => {
-  const formData = new FormData();
-  formData.append('username', email); // FastAPI OAuth2 требует 'username'
-  formData.append('password', password);
-  return apiClient.post('/auth/token', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-};
-
-export const getCurrentUserProfile = () => {
-  return apiClient.get('/auth/users/me');
-};
-
-// Функция для чата SMM-бота
+// Экспортируем функцию для чата. Она будет отправлять FormData
 export const sendChatMessage = (formData) => {
   return apiClient.post('/smm_bot/chat', formData, {
     headers: {
-      'Content-Type': 'multipart/form-data', // Исправлена опечатка 'form--data'
+      'Content-Type': 'multipart/form--data',
     },
   });
 };
 
-// Экспорт по умолчанию не используется, чтобы все импорты были одинаковыми.
+
+// Возвращаем экспорт по умолчанию на всякий случай, если он где-то используется
+export default apiClient;
