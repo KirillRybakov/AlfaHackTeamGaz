@@ -4,25 +4,66 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 from loguru import logger
 import json
+import re
 from pydantic import ValidationError
 
-from app.core.llm_client import llm_client
-from app.database import AsyncSessionLocal  # Для создания сессий БД внутри сервиса
-from app.services import promo_service, document_service # Наши новые сервисы
+from app.core.llm_client import llm_client, LLMClient
+from app.database import AsyncSessionLocal
+from app.services import promo_service, document_service
 from app.schemas import promo as promo_schema
 from app.schemas import documents as document_schema
 
-# --- Инициализация RAG (без изменений) ---
+# --- Инициализация ---
 embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-client = chromadb.PersistentClient(path="./chroma_db")
+
+DB_PATH = "/app/chroma_db"
+client = chromadb.PersistentClient(path=DB_PATH)
+
 try:
     collection = client.get_collection(name="smm_assistant_kb")
     RAG_ENABLED = True
-except Exception:
-    RAG_ENABLED = False
-    logger.warning("Коллекция ChromaDB 'smm_assistant_kb' не найдена. RAG будет отключен.")
+    logger.info(f"Успешное подключение к коллекции 'smm_assistant_kb' в ChromaDB по пути: {DB_PATH}")
 
-# --- ОПИСАНИЕ ИНСТРУМЕНТОВ, ДОСТУПНЫХ БОТУ ---
+except Exception as e:
+    RAG_ENABLED = False
+    logger.warning(
+        f"Коллекция ChromaDB 'smm_assistant_kb' не найдена по пути: {DB_PATH}. RAG будет отключен. Ошибка: {e}")
+
+L2_RELEVANCE_THRESHOLD = 5
+PROFANITY_KEYWORDS = {"мат", "дурак", "идиот"}
+SMALL_TALK_PHRASES = {
+    "привет": "Здравствуйте! Я Альфа-Ассистент. Чем могу помочь?",
+    "здравствуй": "Здравствуйте! Я Альфа-Ассистент. Чем могу помочь?",
+    "добрый день": "Добрый день! Я Альфа-Ассистент, готов помочь.",
+    "спасибо": "Всегда рад помочь!",
+    "пока": "До свидания!",
+    "что ты умеешь": "Я могу помочь вам сгенерировать промо-посты, создать документы, найти информацию в базе знаний или проанализировать данные. Что бы вы хотели сделать?"
+}
+RESPONSE_PROFANITY = "Пожалуйста, соблюдайте вежливость в общении."
+RESPONSE_OUT_OF_TOPIC = "Я — ассистент для решения бизнес-задач. К сожалению, я не могу поддержать разговор на бытовые темы."
+RESPONSE_GIBBERISH = "Ваш запрос не содержит осмысленного текста. Попробуйте сформулировать его иначе."
+
+
+def _is_gibberish(text: str) -> bool:
+    text = text.strip()
+    if not text or not re.search(r'[а-яА-Яa-zA-Z]', text):
+        return True
+    alphanumeric_chars = len(re.findall(r'[\w]', text))
+    total_chars = len(text)
+    if total_chars > 0 and (alphanumeric_chars / total_chars) < 0.5:
+        return True
+    return False
+
+
+def censor_output(text: str) -> str:
+    prompt_leak_words = ["контекст", "инструкц", "согласно предоставленному", "основываясь на"]
+    if any(leak in text.lower() for leak in prompt_leak_words):
+        logger.warning(f"ОБНАРУЖЕНА УТЕЧКА ПРОМПТА: '{text}'. Ответ будет заменен.")
+        return "К сожалению, я не нашел точной информации по вашему вопросу."
+    return text
+
+
+# --- ОПИСАНИЕ ИНСТРУМЕНТОВ ---
 TOOLS_PROMPT = """
 У тебя есть доступ к следующим инструментам (функциям) нашего приложения:
 
@@ -40,13 +81,14 @@ TOOLS_PROMPT = """
 3.  **search_knowledge_base(query: str)**
     *   Описание: Ищет ответ на вопрос в базе знаний (SMM-курсы, регламенты).
     *   Когда использовать: Если вопрос явно теоретический (например, "что такое...", "какие обязанности...").
+    *   КРИТИЧЕСКОЕ ПРАВИЛО: Параметр `query` для этого инструмента ДОЛЖЕН БЫТЬ СТРОГО на русском языке. Если пользовательский запрос на другом языке, переведи его на русский перед вызовом.
 
 4.  **navigate_ui(feature_name: str)**
     *   Описание: Объясняет, как найти функцию в интерфейсе.
     *   Когда использовать: Если пользователь спрашивает "где найти", "как открыть".
 """
 
-# --- СУПЕР-УЛУЧШЕННЫЙ СИСТЕМНЫЙ ПРОМПТ ---
+# --- СИСТЕМНЫЙ ПРОМПТ ---
 SYSTEM_PROMPT_WITH_TOOLS = f"""
 Ты — 'Альфа-Ассистент', умный и сверхточный помощник в приложении 'Альфа-Креатор'.
 
@@ -74,97 +116,95 @@ SYSTEM_PROMPT_WITH_TOOLS = f"""
 
 
 # --- ГЛАВНАЯ ФУНКЦИЯ ---
-async def get_bot_response(query: str, llm_client, user_id: int) -> str:
+async def get_bot_response(query: str, llm_client: LLMClient, user_id: int) -> str:
     logger.info(f"Получен запрос от пользователя ID={user_id}: '{query}'")
-    
-    # --- ЭТАП 1: ВЫБОР ИНСТРУМЕНТА (без изменений) ---
+    normalized_query = query.strip().lower()
+
+    if _is_gibberish(normalized_query): return RESPONSE_GIBBERISH
+    if any(profanity in normalized_query for profanity in PROFANITY_KEYWORDS): return RESPONSE_PROFANITY
+    if normalized_query in SMALL_TALK_PHRASES: return SMALL_TALK_PHRASES[normalized_query]
+
     tool_selection_prompt = f"{SYSTEM_PROMPT_WITH_TOOLS}\n\nЗапрос пользователя:\n---\n{query}\n---\n\nТвой JSON с выбором инструмента:"
     try:
         response_str = await llm_client.generate_json_response(tool_selection_prompt)
         json_start = response_str.find('{')
         json_end = response_str.rfind('}')
-        if json_start == -1 or json_end == -1:
-            raise ValueError("Не найден JSON в ответе LLM")
+        if json_start == -1 or json_end == -1: raise ValueError("Не найден JSON в ответе LLM")
         clean_json_str = response_str[json_start:json_end + 1]
         tool_call = json.loads(clean_json_str)
         tool_name = tool_call.get("tool_name")
         parameters = tool_call.get("parameters", {})
     except Exception as e:
-        logger.error(f"Ошибка выбора инструмента или парсинга JSON для user_id={user_id}: {e}\nОтвет LLM: {response_str}")
+        logger.error(f"Ошибка выбора инструмента для user_id={user_id}: {e}\nОтвет LLM: {response_str}")
         return "К сожалению, я не смог понять ваш запрос. Попробуйте переформулировать."
 
-    logger.info(f"Ассистент для пользователя ID={user_id} выбрал инструмент: {tool_name} с параметрами: {parameters}")
+    logger.info(f"Ассистент для user_id={user_id} выбрал инструмент: {tool_name} с параметрами: {parameters}")
 
-    # --- ЭТАП 2: ВЫПОЛНЕНИЕ ИНСТРУМЕНТА (НОВАЯ ЛОГИКА) ---
-    # Создаем сессию БД, которая понадобится нашим сервисам
     async with AsyncSessionLocal() as db:
         try:
+            final_response = ""
             if tool_name == "greet":
-                return "Привет! Я Альфа-Ассистент. Я могу помочь вам сгенерировать промо-посты, создать документы, найти информацию в базе знаний или проанализировать данные. Что бы вы хотели сделать?"
-
+                final_response = SMALL_TALK_PHRASES.get("привет")
             elif tool_name == "generate_promo":
-                # 1. Валидируем параметры от LLM через Pydantic-схему
                 promo_request_data = promo_schema.PromoRequest(**parameters)
-                
-                # 2. Вызываем сервисный слой НАПРЯМУЮ
-                posts = await promo_service.generate_promo_logic(
-                    request=promo_request_data,
-                    db=db,
-                    user_id=user_id
-                )
-                return "Готово! Вот несколько идей для постов:\n\n" + "\n".join([f"- {post}" for post in posts])
-
+                posts = await promo_service.generate_promo_logic(request=promo_request_data, db=db, user_id=user_id)
+                final_response = "Готово! Вот несколько идей для постов:\n\n" + "\n".join(
+                    [f"- {post}" for post in posts])
             elif tool_name == "generate_document":
-                # 1. Валидируем параметры от LLM
-                # Убедимся, что details - это словарь
-                if 'details' not in parameters or not isinstance(parameters['details'], dict):
-                    parameters['details'] = {}
+                if 'details' not in parameters or not isinstance(parameters['details'], dict): parameters[
+                    'details'] = {}
                 doc_request_data = document_schema.DocumentRequest(**parameters)
-                
-                # 2. Вызываем сервисный слой НАПРЯМУЮ
-                doc_text = await document_service.generate_document_logic(
-                    request=doc_request_data,
-                    db=db,
-                    user_id=user_id
-                )
-                return f"Документ '{parameters.get('template_name')}' готов! Текст ниже:\n\n---\n{doc_text}"
-
+                doc_text = await document_service.generate_document_logic(request=doc_request_data, db=db,
+                                                                          user_id=user_id)
+                final_response = f"Документ '{parameters.get('template_name')}' готов! Текст ниже:\n\n---\n{doc_text}"
             elif tool_name == "navigate_ui":
                 feature = parameters.get('feature_name', 'нужный раздел')
-                return f"Чтобы найти '{feature}', просто перейдите в соответствующую вкладку в верхнем меню."
+                final_response = f"Чтобы найти '{feature}', просто перейдите в соответствующую вкладку в верхнем меню."
 
             elif tool_name == "search_knowledge_base":
                 if not RAG_ENABLED:
-                    return "К сожалению, моя база знаний сейчас недоступна."
-                rag_query = parameters.get("query")
-                if not rag_query:
-                    return "Пожалуйста, уточните, что именно вы хотите найти."
-                
-                query_embedding = embedding_model.encode([rag_query])
-                results = collection.query(query_embeddings=query_embedding, n_results=1)
-                
-                if not results.get('documents') or not results['documents'][0]:
-                    return "К сожалению, я не нашел точной информации по вашему вопросу в базе знаний."
+                    final_response = "К сожалению, моя база знаний сейчас недоступна."
+                else:
+                    rag_query = parameters.get("query")
+                    if not rag_query:
+                        final_response = "Пожалуйста, уточните, что именно вы хотите найти."
+                    else:
+                        query_embedding = embedding_model.encode([rag_query])
+                        results = collection.query(query_embeddings=query_embedding.tolist(), n_results=1,
+                                                   include=["documents", "distances"])
+                        distance = results.get('distances', [[999]])[0][0]
+                        logger.info(f"RAG: Найден документ с евклидовым расстоянием (L2): {distance}")
 
-                context = results['documents'][0][0]
-                final_prompt = f"..." # Ваш промпт для RAG без изменений
-                response = await llm_client.client.generate(model=llm_client.model, prompt=final_prompt, stream=False)
-                return response['response'].strip()
+                        if not results.get('documents') or not results['documents'][
+                            0] or distance > L2_RELEVANCE_THRESHOLD:
+                            logger.info(
+                                f"RAG результат нерелевантен (расстояние {distance} > {L2_RELEVANCE_THRESHOLD}). Возврат к общим знаниям LLM.")
+
+                            final_prompt = f"Ответь на вопрос пользователя кратко и понятно, СТРОГО на русском языке, как если бы ты был SMM-экспертом. Вопрос: '{rag_query}'"
+
+                            response = await llm_client.client.generate(model=llm_client.model, prompt=final_prompt,
+                                                                        stream=False)
+                            final_response = response['response'].strip()
+                        else:
+                            logger.info("RAG результат релевантен. Ответ на основе контекста.")
+                            context = results['documents'][0][0]
+                            final_prompt = f"Ты должен ответить на вопрос пользователя, основываясь ИСКЛЮЧИТЕЛЬНО на предоставленном ниже КОНТЕКСТЕ.\nКОНТЕКСТ:\n---\n{context}\n---\nВОПРОС: '{rag_query}'"
+                            response = await llm_client.client.generate(model=llm_client.model, prompt=final_prompt,
+                                                                        stream=False)
+                            final_response = response['response'].strip()
 
             elif tool_name == "unrelated_query":
-                return "Я — ассистент для решения бизнес-задач. К сожалению, я не могу поддержать разговор на бытовые темы."
-            
+                final_response = RESPONSE_OUT_OF_TOPIC
             elif tool_name == "clarify":
-                return parameters.get("question", "Не могли бы вы уточнить ваш запрос?")
-
+                final_response = parameters.get("question", "Не могли бы вы уточнить ваш запрос?")
             else:
                 logger.warning(f"Неизвестный инструмент '{tool_name}' выбран для user_id={user_id}")
-                return "Я понял, что вы хотите сделать, но пока не умею выполнять такие действия."
+                final_response = "Я понял, что вы хотите сделать, но пока не умею выполнять такие действия."
 
+            return censor_output(final_response)
         except ValidationError as e:
-            # Ловим ошибки, если LLM сгенерировала неправильные параметры для наших схем
-            logger.warning(f"Ошибка валидации параметров от LLM для инструмента '{tool_name}': {e}")
+            logger.warning(f"Ошибка валидации параметров от LLM для '{tool_name}': {e}")
             return f"Я попытался использовать инструмент '{tool_name}', но мне не хватило данных. Не могли бы вы предоставить больше информации?"
         except Exception as e:
             logger.error(f"Ошибка выполнения инструмента '{tool_name}' для user_id={user_id}: {e}", exc_info=True)
-            return f"К сожалению, при выполнении вашей команды произошла внутренняя ошибка."
+            return "К сожалению, при выполнении вашей команды произошла внутренняя ошибка."
