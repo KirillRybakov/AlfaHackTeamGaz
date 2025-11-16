@@ -30,7 +30,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+#test
 # Настройка логирования
 logger.remove()
 logger.add(sys.stderr, level="INFO")
