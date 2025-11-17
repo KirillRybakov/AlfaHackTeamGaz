@@ -1,4 +1,3 @@
-// src/modules/RegisterPage.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -17,7 +16,7 @@ const RegisterPage = () => {
       toast.error('Пожалуйста, заполните все поля.');
       return;
     }
-    if (password.length < 6) { // Пример простой валидации
+    if (password.length < 6) {
       toast.error('Пароль должен быть не менее 6 символов.');
       return;
     }
@@ -25,7 +24,7 @@ const RegisterPage = () => {
     try {
       await register(email, password);
       toast.success('Регистрация прошла успешно!');
-      navigate('/'); // Перенаправляем на главную страницу после регистрации
+      navigate('/'); 
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Ошибка регистрации. Возможно, такой email уже занят.');
     } finally {
