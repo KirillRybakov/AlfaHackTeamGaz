@@ -2,14 +2,8 @@ import re
 from urllib.parse import urlparse
 from typing import Optional, List, Dict, Any
 
-# Импортируем нашу модель
 from app.schemas.socialmedia import SocialMediaInfo
 
-# Конфигурация парсеров для разных соцсетей
-# Каждый парсер содержит:
-# - domains: список доменов, относящихся к соцсети
-# - pattern: регулярное выражение для извлечения идентификатора из пути ссылки
-# - template: шаблон для формирования итогового описания
 SOCIAL_MEDIA_PARSERS: List[Dict[str, Any]] = [
     {
         "platform": "Instagram",
@@ -39,21 +33,15 @@ async def analyze_social(link: str) -> Optional[SocialMediaInfo]:
     Возвращает структурированную информацию или None, если ссылка не распознана.
     """
     try:
-        # 1. Парсим URL, чтобы надежно получить домен и путь
         parsed_url = urlparse(link)
         domain = parsed_url.netloc
         path = parsed_url.path
     except Exception:
-        # Если ссылка некорректна, urlparse может выдать ошибку
         return None
-
-    # 2. Ищем подходящий парсер по домену
     for parser in SOCIAL_MEDIA_PARSERS:
         if domain in parser["domains"]:
-            # 3. Если домен совпал, применяем регулярное выражение к пути
             match = parser["pattern"].search(path)
             if match:
-                # 4. Если идентификатор найден, формируем результат
                 identifier = match.group(1)
                 summary = parser["template"].format(identifier=identifier)
                 return SocialMediaInfo(
@@ -62,5 +50,4 @@ async def analyze_social(link: str) -> Optional[SocialMediaInfo]:
                     analysis_summary=summary
                 )
 
-    # 5. Если ни один парсер не подошел
     return None
