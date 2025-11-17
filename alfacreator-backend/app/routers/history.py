@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[history_schema.History])
 async def read_history_for_current_user(
-    # Принимаем request_type как необязательный query-параметр
+
     request_type: Optional[str] = Query(None, description="Тип запроса для фильтрации (например, 'promo')"),
     skip: int = 0,
     limit: int = 100,
@@ -24,7 +24,7 @@ async def read_history_for_current_user(
     Получает историю запросов для текущего аутентифицированного пользователя.
     Можно отфильтровать по типу запроса.
     """
-    # Передаем ID пользователя и тип запроса в CRUD-функцию
+
     history_entries = await crud.get_history_entries(
         db=db, 
         user_id=current_user.id, 
