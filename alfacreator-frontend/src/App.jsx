@@ -26,9 +26,7 @@ const AppLayout = () => {
       <div className="mb-6 flex flex-wrap justify-center gap-2 md:gap-4">
         <NavLink to="/promo" className={navButtonClasses}>Генератор Промо</NavLink>
         
-        {/* ▼▼▼ ИСПРАВЛЕНА ОПЕЧАТКА ▼▼▼ */}
         <NavLink to="/analytics" className={navButtonClasses}>Аналитика CSV</NavLink>
-        {/* ▲▲▲ КОНЕЦ ИСПРАВЛЕНИЯ ▲▲▲ */}
 
         <NavLink to="/documents" className={navButtonClasses}>Шаблоны</NavLink>
         <NavLink to="/smart-analytics" className={navButtonClasses}>Умная Аналитика</NavLink>
@@ -68,14 +66,11 @@ function App() {
         } />
       </Routes>
       
-      {/* ▼▼▼ ДОБАВЛЕНА ПРОВЕРКА НА 'user' ▼▼▼ */}
-      {/* Теперь мы рендерим виджет, только если isAuthenticated И объект user УЖЕ загружен */}
       {isAuthenticated && user && (
         <ChatWidget 
           key={user.id} 
         />
       )}
-      {/* ▲▲▲ КОНЕЦ ИЗМЕНЕНИЯ ▲▲▲ */}
     </div>
   );
 }
