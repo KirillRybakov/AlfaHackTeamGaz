@@ -1,12 +1,9 @@
-// alfacreator-frontend/src/modules/ChatWidget.jsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Paperclip } from 'lucide-react';
 import { sendChatMessage } from '../api/apiClient';
 import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
 
-// Анимация печатания
 const TypingIndicator = () => (
   <div className="flex items-center space-x-1 p-3">
     <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-0"></span>
@@ -22,7 +19,7 @@ const ChatWidget = () => {
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null); // Реф для сброса значения инпута файла
+  const fileInputRef = useRef(null); 
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,7 +38,7 @@ const ChatWidget = () => {
   const removeFile = () => {
     setFile(null);
     if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Сбрасываем значение инпута
+        fileInputRef.current.value = "";
     }
   }
 
@@ -52,7 +49,7 @@ const ChatWidget = () => {
     const userMessage = { sender: 'user', text: userMessageText };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
-    removeFile(); // Используем нашу функцию для сброса файла
+    removeFile();
     setIsLoading(true);
 
     try {
@@ -76,7 +73,7 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* --- ОБНОВЛЕННАЯ ПЛАВАЮЩАЯ КНОПКА-ТРИГГЕР --- */}
+      {/* кнопка триггера */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-5 right-5 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-transform transform hover:scale-110 z-50"
@@ -85,11 +82,11 @@ const ChatWidget = () => {
         {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
       </button>
 
-      {/* --- ОБНОВЛЕННОЕ ОКНО ЧАТА С АДАПТИВНЫМИ РАЗМЕРАМИ --- */}
+      {/*окно с результатом */}
       <div
         className={`fixed bottom-24 right-5 bg-white rounded-xl shadow-2xl flex flex-col transition-all duration-300 
                     w-[90vw] max-w-md h-[70vh] max-h-[600px] 
-                    resize-y overflow-auto ${ // <-- ДОБАВЛЯЕМ RESIZE-Y (изменение размера по вертикали)
+                    resize-y overflow-auto ${
                     isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
       >
         <header className="bg-red-600 text-white p-4 flex justify-between items-center rounded-t-xl cursor-move flex-shrink-0">
