@@ -1,5 +1,3 @@
-#Запускается отдельно при необходимости распарсить файл
-# alfacreator-backend/prepare_db.py
 import os
 import json
 from sentence_transformers import SentenceTransformer
@@ -8,7 +6,6 @@ import docx
 import pypdf
 import chromadb
 
-# --- НОВЫЕ ФУНКЦИИ-ПАРСЕРЫ ---
 
 def parse_pdf(file_path: str) -> str:
     """Извлекает текст из PDF файла."""
@@ -53,8 +50,6 @@ def parse_json_smm(file_path: str) -> list:
     return docs
 
 
-# --------------------------------
-
 def load_and_chunk_docs(folder_path: str) -> list:
     """
     Сканирует папку, парсит все файлы и разбивает текст на чанки.
@@ -76,27 +71,22 @@ def load_and_chunk_docs(folder_path: str) -> list:
             if text:
                 raw_docs.append({"text": text, "source": filename})
         elif filename.endswith(".json"):
-            # Предполагаем, что JSON-файлы имеют сложную структуру, как наши курсы
-            # и их парсер возвращает уже готовые небольшие документы
             parsed_json_docs = parse_json_smm(file_path)
             raw_docs.extend(parsed_json_docs)
         else:
             print(f"    - Пропущен неподдерживаемый формат: {filename}")
 
-    # --- ЧАНКИНГ (РАЗБИЕНИЕ НА КУСОЧКИ) ---
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,  # Размер чанка в символах
-        chunk_overlap=100,  # Перекрытие между чанками
+        chunk_size=1000,
+        chunk_overlap=100, 
         length_function=len,
     )
 
     final_docs = []
     for doc in raw_docs:
-        # JSON-документы уже маленькие, их не нужно разбивать
         if ".json" in doc["source"]:
             final_docs.append(doc)
         else:
-            # А вот текст из PDF и DOCX разбиваем
             chunks = text_splitter.split_text(doc["text"])
             for chunk in chunks:
                 final_docs.append({"text": chunk, "source": doc["source"]})
@@ -120,11 +110,9 @@ def main():
     embeddings = embedding_model.encode([doc["text"] for doc in documents], show_progress_bar=True)
 
     print("\nЭтап 4: Сохранение данных в ChromaDB...")
-    # Используем PersistentClient для сохранения БД на диск
     chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
     collection_name = "smm_assistant_kb"
-    # Удаляем старую коллекцию, если она есть, для полного обновления
     if collection_name in [c.name for c in chroma_client.list_collections()]:
         print(f"Удаление старой коллекции '{collection_name}'...")
         chroma_client.delete_collection(name=collection_name)
