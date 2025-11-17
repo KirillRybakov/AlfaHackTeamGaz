@@ -3,5 +3,5 @@ from typing import Optional
 
 class SocialMediaInfo(BaseModel):
     platform: str
-    identifier: Optional[str] = None # Имя пользователя, ID канала и т.д.
+    identifier: Optional[str] = None
     analysis_summary: str
