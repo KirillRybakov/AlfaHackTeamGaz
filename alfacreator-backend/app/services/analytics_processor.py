@@ -42,14 +42,13 @@ async def process_sales_file(task_id: str, file_path: str, user_id: int):
             filename = file_path.split(f"{task_id}_")[-1]
 
             history_entry_data = history_schema.HistoryCreate(
-                request_type="analytics", # Тип истории
+                request_type="analytics",
                 input_data={"filename": filename},
-                output_data=llm_response_data # Сохраняем весь ответ от LLM
+                output_data=llm_response_data
             )
             
             await crud.create_history_entry(db=db, user_id=user_id, entry=history_entry_data)
 
-            # Обновляем статус задачи с полным результатом
             TASK_STORAGE[task_id] = {"status": "complete", "result": llm_response_data}
             logger.info(f"[{task_id}] Обработка завершена успешно.")
 
