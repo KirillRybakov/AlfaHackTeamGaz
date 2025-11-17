@@ -1,5 +1,3 @@
-# alfacreator-backend/app/services/template_store.py
-
 TEMPLATES = {
     "invoice": """
 СЧЕТ НА ОПЛАТУ № [Номер счета] от [Дата счета] г.
