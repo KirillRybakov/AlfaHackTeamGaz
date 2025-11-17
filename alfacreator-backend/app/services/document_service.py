@@ -1,4 +1,3 @@
-# alfacreator-backend/app/services/document_service.py
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
@@ -49,5 +48,4 @@ async def generate_document_logic(
         
         return generated_text
     except Exception as e:
-        # Пробрасываем ошибку выше, чтобы роутер ее поймал
         raise e
