@@ -1,4 +1,3 @@
-# alfacreator-backend/app/routers/promo.py
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
