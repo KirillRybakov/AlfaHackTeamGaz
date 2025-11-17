@@ -1,5 +1,3 @@
-// alfacreator-frontend/src/modules/PromoGenerator.jsx
-
 import React, { useState } from 'react';
 import { generatePromo } from '../api/apiClient';
 import toast from 'react-hot-toast';
@@ -45,7 +43,7 @@ const PromoGenerator = () => {
 
   const handleHistoryItemClick = (historyItem) => {
     setResults(historyItem.output_data.results);
-    setFormData(historyItem.input_data); // Заполняем форму старыми данными
+    setFormData(historyItem.input_data);
     toast.success("Результат из истории загружен!");
   };
 
