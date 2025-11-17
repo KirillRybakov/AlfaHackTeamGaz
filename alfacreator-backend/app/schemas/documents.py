@@ -1,7 +1,5 @@
-# alfacreator-backend/app/schemas/documents.py
-
 from pydantic import BaseModel, Field
-from typing import Dict, Any # <-- Изменение здесь
+from typing import Dict, Any
 
 class DocumentRequest(BaseModel):
     template_name: str = Field(..., example="invoice")
