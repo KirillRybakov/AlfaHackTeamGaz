@@ -9,7 +9,7 @@ class LLMClient:
     """
     def __init__(self, model: str, host: str):
         self.model = model
-        # Инициализируем асинхронный клиент с указанием хоста
+
         self.client = ollama.AsyncClient(host=host)
         logger.info(f"LLM-клиент инициализирован для модели '{self.model}' на хосте '{host}'")
 
@@ -25,7 +25,7 @@ class LLMClient:
             response = await self.client.generate(
                 model=self.model,
                 prompt=prompt,
-                format='json',  # Критически важный параметр для получения валидного JSON
+                format='json',
                 stream=False
             )
             logger.info("Ответ от LLM получен успешно.")
@@ -34,5 +34,5 @@ class LLMClient:
             logger.error(f"Ошибка при взаимодействии с Ollama: {e}")
             raise ConnectionError(f"Не удалось связаться с сервером Ollama. Убедитесь, что он запущен и доступен по адресу {self.client._client.host}. Ошибка: {e}")
 
-# Создаем единый экземпляр клиента для всего приложения
+
 llm_client = LLMClient(model=settings.OLLAMA_MODEL, host=settings.OLLAMA_HOST)
