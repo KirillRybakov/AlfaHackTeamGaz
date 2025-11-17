@@ -1,5 +1,3 @@
-// src/modules/ProfilePage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { updateUserProfile, changeUserPassword } from '../api/apiClient';
@@ -8,7 +6,6 @@ import toast from 'react-hot-toast';
 const ProfilePage = () => {
     const { user, updateUser } = useAuth();
     
-    // Состояние для формы информации о профиле
     const [formData, setFormData] = useState({
         full_name: '',
         company_name: '',
@@ -16,11 +13,10 @@ const ProfilePage = () => {
     });
     const [infoLoading, setInfoLoading] = useState(false);
 
-    // Состояние для формы смены пароля
+
     const [passwordData, setPasswordData] = useState({ current_password: '', new_password: '', confirm_password: '' });
     const [passwordLoading, setPasswordLoading] = useState(false);
 
-    // Синхронизируем состояние формы с данными пользователя при загрузке
     useEffect(() => {
         if (user) {
             setFormData({
@@ -31,7 +27,6 @@ const ProfilePage = () => {
         }
     }, [user]);
     
-    // Обработчики для полей
     const handleInfoChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -39,7 +34,6 @@ const ProfilePage = () => {
         setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
     };
 
-    // Обработчик отправки формы профиля
     const handleInfoSubmit = async (e) => {
         e.preventDefault();
         setInfoLoading(true);
@@ -54,7 +48,6 @@ const ProfilePage = () => {
         }
     };
     
-    // Обработчик отправки формы смены пароля
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
         if (passwordData.new_password !== passwordData.confirm_password) {
@@ -76,7 +69,7 @@ const ProfilePage = () => {
     
     return (
       <div className="max-w-2xl mx-auto space-y-8 py-8">
-        {/* --- Форма обновления профиля --- */}
+        {/*  Форма профиля - */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-4 text-gray-800">Профиль пользователя</h2>
           <form onSubmit={handleInfoSubmit} className="space-y-4">
@@ -102,7 +95,7 @@ const ProfilePage = () => {
           </form>
         </div>
 
-        {/* --- ВОССТАНОВЛЕННАЯ ФОРМА СМЕНЫ ПАРОЛЯ --- */}
+        {/*  смена пароля */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-4 text-gray-800">Смена пароля</h2>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
