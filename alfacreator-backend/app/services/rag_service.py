@@ -1,5 +1,3 @@
-# alfacreator-backend/app/services/rag_service.py
-
 import chromadb
 from sentence_transformers import SentenceTransformer
 from loguru import logger
@@ -13,7 +11,6 @@ from app.services import promo_service, document_service
 from app.schemas import promo as promo_schema
 from app.schemas import documents as document_schema
 
-# --- Инициализация ---
 embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
 DB_PATH = "/app/chroma_db"
@@ -63,7 +60,6 @@ def censor_output(text: str) -> str:
     return text
 
 
-# --- ОПИСАНИЕ ИНСТРУМЕНТОВ ---
 TOOLS_PROMPT = """
 У тебя есть доступ к следующим инструментам (функциям) нашего приложения:
 
@@ -88,7 +84,6 @@ TOOLS_PROMPT = """
     *   Когда использовать: Если пользователь спрашивает "где найти", "как открыть".
 """
 
-# --- СИСТЕМНЫЙ ПРОМПТ ---
 SYSTEM_PROMPT_WITH_TOOLS = f"""
 Ты — 'Альфа-Ассистент', умный и сверхточный помощник в приложении 'Альфа-Креатор'.
 
@@ -115,7 +110,6 @@ SYSTEM_PROMPT_WITH_TOOLS = f"""
 """
 
 
-# --- ГЛАВНАЯ ФУНКЦИЯ ---
 async def get_bot_response(query: str, llm_client: LLMClient, user_id: int) -> str:
     logger.info(f"Получен запрос от пользователя ID={user_id}: '{query}'")
     normalized_query = query.strip().lower()
