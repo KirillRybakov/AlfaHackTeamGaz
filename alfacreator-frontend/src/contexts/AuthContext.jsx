@@ -1,5 +1,3 @@
-// src/contexts/AuthContext.jsx
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { loginUser, registerUser, getCurrentUserProfile } from '../api/apiClient';
 import Loader from '../components/Loader';
@@ -49,7 +47,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   if (loading) {
-    // Оборачиваем в div для лучшего отображения
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-white">
         <Loader />
