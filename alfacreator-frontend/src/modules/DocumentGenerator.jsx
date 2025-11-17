@@ -1,5 +1,3 @@
-// alfacreator-frontend/src/modules/DocumentGenerator.jsx
-
 import React, { useState, useEffect } from 'react';
 import { generateDocument } from '../api/apiClient';
 import toast from 'react-hot-toast';
@@ -8,7 +6,6 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import HistorySidebar from './HistorySidebar';
 
-// --- ПОЛНАЯ СТРУКТУРА ПОЛЕЙ ДЛЯ ВСЕХ 7 ШАБЛОНОВ ---
 const TEMPLATE_FIELDS = {
   invoice: [
     { name: "Номер счета", label: "Номер счета", group: "Общее" },
@@ -229,8 +226,8 @@ const DocumentGenerator = (props) => {
 
   const handleHistoryItemClick = (historyItem) => {
     setResult(historyItem.output_data.generated_text);
-    setFormData(historyItem.input_data.details); // Заполняем форму старыми данными
-    setTemplate(historyItem.input_data.template_name); // Выбираем правильный шаблон
+    setFormData(historyItem.input_data.details);
+    setTemplate(historyItem.input_data.template_name);
     toast.success("Результат из истории загружен!");
   };
 
