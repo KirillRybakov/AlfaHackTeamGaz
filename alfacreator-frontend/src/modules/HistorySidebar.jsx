@@ -1,11 +1,8 @@
-// alfacreator-frontend/src/modules/HistorySidebar.jsx
-
 import React, { useState, useEffect } from 'react';
 import { getHistory } from '../api/apiClient';
 import toast from 'react-hot-toast';
 import Loader from '../components/Loader';
 
-// Компоненты для предпросмотра разных типов истории
 const PromoHistoryItem = ({ item }) => (
   <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
     {item.output_data.results.slice(0, 2).map((text, i) => (
