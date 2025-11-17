@@ -20,10 +20,10 @@ class ChatResponse(BaseModel):
 
 @router.post("/chat", response_model=ChatResponse)
 async def handle_chat_message(
-        # ▼▼▼ 2. ДОБАВЛЯЕМ ЗАВИСИМОСТИ ДЛЯ ЗАЩИТЫ И РАБОТЫ С БД ▼▼▼
+
         db: AsyncSession = Depends(get_db),
         current_user: user_schema.User = Depends(get_current_user),
-        # ▲▲▲ КОНЕЦ ЗАВИСИМОСТЕЙ ▲▲▲
+
         message: str = Form(""),
         file: Optional[UploadFile] = File(None)
 ):
@@ -31,26 +31,21 @@ async def handle_chat_message(
         raise HTTPException(status_code=400, detail="Сообщение или файл должны быть предоставлены.")
 
     query = message
-    input_data_for_history = {"message": message} # Готовим данные для истории
+    input_data_for_history = {"message": message}
 
     if file:
-        # Ваша логика обработки файла. Для истории сохраним только имя файла.
+
         contents = await file.read()
         file_text = f"\n\n--- Приложен файл: {file.filename} ---"
         query += file_text
         input_data_for_history["filename"] = file.filename
 
-    # ▼▼▼ 3. ПЕРЕДАЕМ ID ПОЛЬЗОВАТЕЛЯ В СЕРВИС (ВАЖНО ДЛЯ КОНТЕКСТА) ▼▼▼
-    # Это позволит сервису в будущем хранить и извлекать историю 
-    # диалога для конкретного пользователя.
     bot_reply = await get_bot_response(
         query=query, 
         llm_client=llm_client,
-        user_id=current_user.id # <--- Передаем ID
+        user_id=current_user.id
     )
-    # ▲▲▲ КОНЕЦ ПЕРЕДАЧИ ID ▲▲▲
 
-    # ▼▼▼ 4. СОХРАНЯЕМ ДИАЛОГ В ИСТОРИЮ ▼▼▼
     history_entry_data = history_schema.HistoryCreate(
         request_type="smm_bot",
         input_data=input_data_for_history,
