@@ -1,5 +1,3 @@
-// alfacreator-frontend/src/modules/AnalyticsDashboard.jsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
