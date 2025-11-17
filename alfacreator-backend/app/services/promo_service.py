@@ -1,5 +1,3 @@
-# alfacreator-backend/app/services/promo_service.py
-
 import json
 import re
 from loguru import logger
@@ -13,10 +11,6 @@ from app import crud
 
 
 def _parse_llm_response_safely(response_str: str, user_id: int) -> List[str]:
-    """
-    Сверхустойчивая функция для извлечения списка строк из ответа LLM.
-    Пробует несколько методов, фильтрует URL и никогда не падает с ошибкой.
-    """
     results = []
     try:
         match = re.search(r'(\[[\s\S]*\])', response_str)
@@ -51,9 +45,6 @@ async def generate_promo_logic(
         db: AsyncSession,
         user_id: int
 ) -> list[str]:
-    """
-    Основная бизнес-логика для генерации промо-материалов с финальными улучшениями.
-    """
     prompt = (
         "Ты — SMM-копирайтер. Создай 3 уникальных рекламных поста.\n"
         "Информация:\n"
