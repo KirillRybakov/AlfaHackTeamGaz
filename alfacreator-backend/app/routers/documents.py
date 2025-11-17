@@ -1,11 +1,10 @@
-# alfacreator-backend/app/routers/documents.py
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.documents import DocumentRequest, DocumentResponse
 from app.core.dependencies import get_db, get_current_user
 from app.schemas import user as user_schema
-from app.services import document_service # <-- Импорт сервиса
+from app.services import document_service
 
 router = APIRouter()
 
