@@ -242,7 +242,7 @@ Alphahack/
 
 1.  **Клонируйте репозиторий:**
     ```bash
-    git clone https://github.com/KirillRybakov/AlfaHackTeamGaz
+    git clone https://github.com/KirillRybakov/MLGaz
     cd Alphahack
     ```
 
