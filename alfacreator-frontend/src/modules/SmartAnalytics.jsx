@@ -1,7 +1,4 @@
-// alfacreator-frontend/src/modules/SmartAnalytics.jsx
-
 import React, { useState } from 'react';
-// Убедись, что функция импортируется правильно
 import { runSmartAnalysis } from '../api/apiClient';
 import Loader from '../components/Loader';
 import toast from 'react-hot-toast';
@@ -34,7 +31,6 @@ const SmartAnalytics = () => {
         formData.append('link', link);
       }
 
-      // Используем правильное имя функции
       const response = await runSmartAnalysis(formData);
 
       setResult(response.data);
