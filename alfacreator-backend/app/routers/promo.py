@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Импортируем наш новый сервис
+
 from app.services import promo_service 
 from app.schemas.promo import PromoRequest, PromoResponse
 from app.core.dependencies import get_db, get_current_user
@@ -17,7 +17,7 @@ async def generate_promo(
     current_user: user_schema.User = Depends(get_current_user)
 ):
     try:
-        # Вся сложная логика теперь в одной функции
+
         results = await promo_service.generate_promo_logic(
             request=request, 
             db=db, 
@@ -25,5 +25,5 @@ async def generate_promo(
         )
         return PromoResponse(results=results)
     except Exception as e:
-        # Ловим ошибки из сервисного слоя
+
         raise HTTPException(status_code=500, detail=f"A critical backend error occurred: {str(e)}")
